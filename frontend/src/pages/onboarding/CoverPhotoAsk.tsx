@@ -118,6 +118,7 @@ import { useNavigate } from 'react-router-dom';
 import { uploadToS3 } from '../../utils/uploadToS3';
 import { resizeImage } from '../../utils/imageResizer';
 import { API_BASE_URL } from '../../utils/apiConfig';
+import { uploadToVercelBlob } from '../../utils/uploadToVercelBlob';
 
 const CoverPhotoUpload = () => {
   const { user } = useUser();
@@ -125,64 +126,81 @@ const CoverPhotoUpload = () => {
   const navigate = useNavigate();
 
   // Function to handle file selection, resize, and upload
+  // const handleCoverPhotoUpload = async (
+  //   event: React.ChangeEvent<HTMLInputElement>
+  // ) => {
+  //   const maxFileSize = 5 * 1024 * 1024; // 5MB, adjust this value as needed
+
+  //   const file = event.target.files?.[0];
+  //   if (!file || !file.type.startsWith('image/')) return;
+
+  //   try {
+  //     const resizedFile = await resizeImage(file, maxFileSize);
+
+  //     // Fetch the pre-signed POST data
+  //     const presignResponse = await fetch(
+  //       `${API_BASE_URL}/generate-upload-url`,
+  //       {
+  //         method: 'POST',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //         body: JSON.stringify({
+  //           fileName: encodeURIComponent(resizedFile.name),
+  //           contentType: resizedFile.type,
+  //         }),
+  //       }
+  //     );
+
+  //     if (!presignResponse.ok) {
+  //       throw new Error('Could not fetch pre-signed POST data');
+  //     }
+
+  //     const postData = await presignResponse.json();
+
+  //     // Construct form data with the file and required fields from the pre-signed POST data
+  //     const formData = new FormData();
+  //     Object.keys(postData.fields).forEach((key) => {
+  //       formData.append(key, postData.fields[key]);
+  //     });
+  //     formData.append('file', resizedFile); // Ensure this matches the 'file' field in your S3 bucket policy
+
+  //     // POST the form data to the S3 bucket
+  //     const uploadResponse = await fetch(postData.url, {
+  //       method: 'POST',
+  //       body: formData,
+  //     });
+
+  //     if (!uploadResponse.ok) {
+  //       throw new Error('Upload to S3 failed');
+  //     }
+
+  //     // Construct the URL to the uploaded file
+  //     const imageUrl = `${postData.url}/${encodeURIComponent(
+  //       postData.fields.key
+  //     )}`;
+
+  //     setCoverPhoto(imageUrl); // Correctly update the state for coverPhoto
+  //     console.log('Upload successful');
+  //   } catch (error) {
+  //     console.error('Error resizing or uploading file:', error);
+  //   }
+  // };
+
+  // Inside your CoverPhotoUpload component
   const handleCoverPhotoUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const maxFileSize = 5 * 1024 * 1024; // 5MB, adjust this value as needed
-
     const file = event.target.files?.[0];
-    if (!file || !file.type.startsWith('image/')) return;
-
+    if (!file) return;
+  
     try {
-      const resizedFile = await resizeImage(file, maxFileSize);
-
-      // Fetch the pre-signed POST data
-      const presignResponse = await fetch(
-        `${API_BASE_URL}/generate-upload-url`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            fileName: encodeURIComponent(resizedFile.name),
-            contentType: resizedFile.type,
-          }),
-        }
-      );
-
-      if (!presignResponse.ok) {
-        throw new Error('Could not fetch pre-signed POST data');
-      }
-
-      const postData = await presignResponse.json();
-
-      // Construct form data with the file and required fields from the pre-signed POST data
-      const formData = new FormData();
-      Object.keys(postData.fields).forEach((key) => {
-        formData.append(key, postData.fields[key]);
-      });
-      formData.append('file', resizedFile); // Ensure this matches the 'file' field in your S3 bucket policy
-
-      // POST the form data to the S3 bucket
-      const uploadResponse = await fetch(postData.url, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error('Upload to S3 failed');
-      }
-
-      // Construct the URL to the uploaded file
-      const imageUrl = `${postData.url}/${encodeURIComponent(
-        postData.fields.key
-      )}`;
-
-      setCoverPhoto(imageUrl); // Correctly update the state for coverPhoto
-      console.log('Upload successful');
+      await uploadToVercelBlob(file, (url) => {
+        setCoverPhoto(url);
+        localStorage.setItem('coverPhotoUrl', url); // Correct key is used here
+      }, 'coverPhoto');
     } catch (error) {
-      console.error('Error resizing or uploading file:', error);
+      console.error('Error uploading file:', error);
     }
   };
 
