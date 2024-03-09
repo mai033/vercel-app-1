@@ -216,6 +216,13 @@ mongoose
 
 const app = express();
 
+const corsOptions = {
+  origin: 'https://vercel-app-2-two.vercel.app', // Replace with your Vercel app's URL
+  optionsSuccessStatus: 200, // For legacy browser support
+};
+
+app.use(cors(corsOptions));
+
 app.use(cors());
 app.use(bodyParser.json());
 
