@@ -189,7 +189,10 @@ const Dashboard = () => {
   }
 
   const handlePlaceSelected = (place: google.maps.places.PlaceResult) => {
-    console.log(place); // Or whatever you want to do with the place object
+    if (place.formatted_address) {
+      setLocation(place.formatted_address);
+      console.log('Location selected:', place.formatted_address);
+    }
   };
 
   const handleSubscriptionToggle = (status: boolean) => {

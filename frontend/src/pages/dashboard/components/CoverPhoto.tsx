@@ -172,18 +172,26 @@ const CoverPhoto: React.FC<CoverPhotoProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    try {
-      await uploadToVercelBlob(
-        file,
+    const maxFileSize = 5 * 1024 * 1024; // 5MB, adjust this value as needed
+
+    resizeImage(file, maxFileSize).then((resizedFile) => {
+      // Assuming resizedFile is a Blob, convert it to a File object
+      const fileToUpload = new File([resizedFile], file.name, { type: file.type });
+
+      uploadToVercelBlob(
+        fileToUpload,
         (url) => {
-          setCoverPhoto(url); // Assuming uploadToVercelBlob is modified to return the URL
-          localStorage.setItem('coverPhotoUrl', url); // Store the URL in localStorage
+          // Here you use setCoverPhotoUrl which was passed as a prop
+          setCoverPhotoUrl(url); // This updates the parent component's state
+          localStorage.setItem('coverPhotoUrl', url); // Correctly store the URL in localStorage
         },
-        'coverPhoto'
-      );
-    } catch (error) {
-      console.error('Error uploading file:', error);
-    }
+        'coverPhotoUrl' // Key under which to store the URL in localStorage
+      ).catch((error) => {
+        console.error('Error uploading resized file:', error);
+      });
+    }).catch((error) => {
+      console.error('Error resizing file:', error);
+    });
   };
 
   return (

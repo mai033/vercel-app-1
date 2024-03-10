@@ -18,7 +18,7 @@
 // // // Export the Express API
 // // module.exports = app
 
-//Working
+//Working version
 // require('dotenv').config();
 // const express = require('express');
 // const mongoose = require('mongoose');
@@ -216,13 +216,6 @@ mongoose
 
 const app = express();
 
-const corsOptions = {
-  origin: 'https://vercel-app-2-two.vercel.app', // Replace with your Vercel app's URL
-  optionsSuccessStatus: 200, // For legacy browser support
-};
-
-app.use(cors(corsOptions));
-
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -316,10 +309,10 @@ app.post('/generate-upload-url', async (req, res) => {
         ['content-length-range', 0, 10485760], // up to 10 MB
         ['starts-with', '$Content-Type', contentType],
       ],
-      // Fields: {
-      //   acl: 'public-read',
-      //   'Content-Type': contentType,
-      // },
+      Fields: {
+        acl: 'public-read',
+        'Content-Type': contentType,
+      },
       Expires: 600, // Seconds before the presigned post expires. 3600 by default.
     });
 
